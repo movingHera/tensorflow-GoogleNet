@@ -1,5 +1,5 @@
 from networks.network import Network
-from google_net.config import cfg
+from config.config import cfg
 import tensorflow as tf
 
 class GoogLeNet_Train(Network):
@@ -10,7 +10,9 @@ class GoogLeNet_Train(Network):
         self.n_classes = cfg.TRAIN.N_CLASSES
         self.data = tf.placeholder(tf.float32, shape=(None, cfg.PREPROCESS.CROP_SIZE, cfg.PREPROCESS.CROP_SIZE, cfg.PREPROCESS.CHANNELS))
         self.keep_prob = tf.placeholder(tf.float32, shape=())
+        #self.keep_prob = 0.5
         self.layers = dict({'data': self.data})
+        self.pretrained_var_list = []
         self.setup()
 
     def setup(self):

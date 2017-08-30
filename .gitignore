@@ -1,4 +1,4 @@
 data/
 pretrained_model/
 output/*
-
+*.pyc

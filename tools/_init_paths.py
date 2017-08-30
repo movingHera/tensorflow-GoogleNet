@@ -11,6 +11,6 @@ def add_path(path):
 
 this_dir = osp.dirname(__file__)
 
-# Add src to PYTHONPATH
-src_path = osp.join(this_dir, 'src')
-add_path(src_path)
+# Add 'lib' to PYTHONPATH
+lib_path = osp.join(this_dir, 'lib')
+add_path(lib_path)

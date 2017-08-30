@@ -11,6 +11,7 @@ class VGG16_Train(Network):
         self.data = tf.placeholder(tf.float32, shape=(None, cfg.PREPROCESS.CROP_SIZE, cfg.PREPROCESS.CROP_SIZE, cfg.PREPROCESS.CHANNELS))
         self.keep_prob = tf.placeholder(tf.float32, shape=())
         self.layers = dict({'data': self.data})
+        self.pretrained_var_list = []
         self.setup()
 
 

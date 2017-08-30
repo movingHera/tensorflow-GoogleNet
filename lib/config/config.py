@@ -43,10 +43,8 @@ __C.COARSE_CLASSES = ['SUV', 'Sedan', 'Coupe', 'Convertible', 'Pickup', 'Hatchba
 __C.TRAIN = edict()
 
 # The recommended batch size for this model
-__C.TRAIN.BATCH_SIZE = 32
+__C.TRAIN.BATCH_SIZE = 256
 
-# Batch num
-__C.TRAIN.BATCH_NUM = 250
 
 # The number of classes in car dataset
 __C.TRAIN.N_CLASSES = 196

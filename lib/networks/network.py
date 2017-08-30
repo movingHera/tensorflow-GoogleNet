@@ -44,6 +44,7 @@ class Network(object):
         # self.use_dropout = tf.placeholder_with_default(tf.constant(1.0),
         #                                               shape=[],
         #                                               name='use_dropout')
+        self.pretrained_var_list = []
         self.setup()
 
     def setup(self):
@@ -60,39 +61,23 @@ class Network(object):
         for op_name in data_dict:
             with tf.variable_scope(op_name, reuse=True):
                 for param_name, data in data_dict[op_name].iteritems():
-                    #print op_name, param_name
                     try:
                         var = tf.get_variable(param_name)
                         session.run(var.assign(data))
+                        self.pretrained_var_list.append(var)
                     except ValueError:
                         if not ignore_missing:
                             raise
-
-    def get_pretrained_variable_list(self, data_path, ignore_missing=True):
-        '''Load the pretrained variable lists
-        Here we don't assign values to variables
+    
+    def get_params(self, scope_name, *args):
+        '''Get params values for specified layer
         '''
-        pretrained_variable_list = []
-        data_dict = np.load(data_path).item()
-        for op_name in data_dict:
-            with tf.variable_scope(op_name, reuse=True):
-                for param_name, data in data_dict[op_name].iteritems():
-                    try:
-                        var = tf.get_variable(param_name)
-                        pretrained_variable_list.append(var)
-                    except ValueError:
-                        if not ignore_missing:
-                            raise
-
-        return pretrained_variable_list
-
-    def get_variable(self, scope_name):
         temp_list = []
         with tf.variable_scope(scope_name, reuse=True):
-            weights_var = tf.get_variable('weights')
-            biases_var = tf.get_variable('biases')
-            temp_list.append(weights_var)
-            temp_list.append(biases_var)
+            for name in args:
+                var = tf.get_variable(name)
+                temp_list.append(var)
+        
         return temp_list
 
     def feed(self, *args):
@@ -128,7 +113,9 @@ class Network(object):
 
     def make_var(self, name, shape):
         '''Creates a new TensorFlow variable.'''
-        return tf.get_variable(name, shape, trainable=self.trainable)
+        return tf.get_variable(name, shape,
+                initializer=tf.constant_initializer(0.0),
+                trainable=self.trainable)
 
     def validate_padding(self, padding):
         '''Verifies that the padding is one of the supported ones.'''
