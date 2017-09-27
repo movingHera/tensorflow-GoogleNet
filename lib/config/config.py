@@ -39,12 +39,10 @@ __C.ANNOTATION_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data', 'annotations'))
 
 __C.COARSE_CLASSES = ['SUV', 'Sedan', 'Coupe', 'Convertible', 'Pickup', 'Hatchback', 'Wagon', 'Van']
 
-
 __C.TRAIN = edict()
 
 # The recommended batch size for this model
-__C.TRAIN.BATCH_SIZE = 256
-
+__C.TRAIN.BATCH_SIZE = 32
 
 # The number of classes in car dataset
 __C.TRAIN.N_CLASSES = 196
@@ -55,9 +53,6 @@ __C.TRAIN.SNAPSHOT_INFIX = ''
 # The prefix of snap shot file
 __C.TRAIN.SNAPSHOT_PREFIX = 'GoogLeNet'
 
-# The interval (batches) to catch the snapshot
-__C.TRAIN.SNAPSHOT_ITERS = 5000
-
 # Learning rate
 __C.TRAIN.BASE_LEARNING_RATE = 0.001
 
@@ -65,10 +60,14 @@ __C.TRAIN.BASE_LEARNING_RATE = 0.001
 __C.TRAIN.STEP_SIZE = 25000
 
 # Momentum
-__C.TRAIN.MOMEMTUM = 0.9
+__C.TRAIN.MOMENTUM = 0.9
 
 # The number of epochs
 __C.TRAIN.NUM_EPOCHS = 200
+
+# The interval epochs to catch the snapshot
+# We plan to store 5 snapshots
+__C.TRAIN.SNAPSHOT_EPOCHS = __C.TRAIN.NUM_EPOCHS/5
 
 # The directory of pretrained GoogLeNet model
 __C.TRAIN.PRETRAINED_MODEL_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'pretrained_model'))
@@ -77,13 +76,8 @@ __C.TRAIN.PRETRAINED_MODEL_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'pretrained_
 __C.TRAIN.OUTPUT_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'output', 'train'))
 
 
+
 __C.TEST = edict()
 
-# Test batch size
-__C.TEST.BATCH_SIZE = 1000
-
-# Test batch num
-__C.TEST.BATCH_NUM = 8
-
 # The frequency to test the model
-__C.TEST.ITERS = 100
+__C.TEST.EPOCHS = 10

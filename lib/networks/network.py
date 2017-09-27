@@ -74,7 +74,7 @@ class Network(object):
         '''
         temp_list = []
         with tf.variable_scope(scope_name, reuse=True):
-            for name in args:
+            for _, name in enumerate(args):
                 var = tf.get_variable(name)
                 temp_list.append(var)
         

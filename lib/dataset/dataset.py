@@ -6,7 +6,7 @@ import os
 import os.path as osp
 import numpy as np
 import tensorflow as tf
-from google_net.config import cfg
+from config.config import cfg
 from tensorflow.python.ops import data_flow_ops
 
 def process_image(img, scale, isotropic, crop, mean):
@@ -65,10 +65,10 @@ class DataProducer(object):
                         size is the number of data by default 
         '''
         self.__image_set = image_set
-        self.__annotation_filename = dataset_name + '_' + image_set + \
-                                    '_annotation.txt'
+        self.__annotation_filename = os.path.join(cfg.ANNOTATION_DIR, dataset_name + '_' + image_set + \
+                                    '_annotation.txt')
         self.__image_paths, self.__image_labels = \
-                                    self.read_annotation_file(image_set)
+                                    self.read_annotation_file(self.__annotation_filename)
         
         # A boolean flag per image indicating whether its a JPEG or PNG 
         self.__extension_mask = self.create_extension_mask(self.__image_paths)
@@ -93,7 +93,7 @@ class DataProducer(object):
         # Create a queue that will contain all image paths
         # Together with labels and extension indicator
         self.__path_queue = data_flow_ops.FIFOQueue(capacity = 10000, dtypes = [tf.int32, tf.bool, tf.string], shapes=[(1,),(1,),(1,)], name='path_queue') 
-        self.__enqueue_path_op = self.train_path_queue.enqueue_many([self.label_placeholder, self.mask_placeholder, self.image_path_placeholder])
+        self.__enqueue_path_op = self.__path_queue.enqueue_many([self.label_placeholder, self.mask_placeholder, self.image_path_placeholder])
 
         images_and_labels = []
         
@@ -146,7 +146,7 @@ class DataProducer(object):
         '''
 
         image_paths = self.__image_paths
-        labels = self.__labels 
+        labels = self.__image_labels 
         extension_mask = self.__extension_mask 
 
         # the total number of files 
@@ -261,7 +261,7 @@ class DataProducer(object):
                         value = value.strip('\n')  # eliminate the newline character '\n'
                         image_path = str(value)
                         image_path = os.path.join(cfg.DATA_DIR,
-                                'images', self.__image_set, image_path)
+                                self.__image_set, image_path)
                         assert os.path.exists(image_path),\
                                 'Path does not exist: {}'.format(image_path)
                         image_paths.append(image_path)

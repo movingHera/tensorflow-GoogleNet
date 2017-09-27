@@ -1,5 +1,5 @@
 from networks.network import Network
-from google_net.config import cfg
+from config.config import cfg
 import tensorflow as tf
 
 class VGG16_Train(Network):
