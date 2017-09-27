@@ -7,7 +7,7 @@
 1. GoogLeNet: 测试准确率82%左右
 2. VGG16：测试准确率60%左右（这个数据偏低）
 
-如果提示没有"easydict"，使用pip安装即可
+如果提示没有`easydict`，使用pip安装即可。
 
 ## 训练的一些技巧
 
@@ -40,6 +40,7 @@
 * 在获取数据包之前一定要确保队列中有数据，因此我设置了一个queue len变量来记录当前队列中剩余元素的个数，如果queue len小于batch size，那么就会装填数据。
 * tf.train.batch_join支持多线程读取数据，但我亲测发现数据顺序会被打乱，因此目前使用单线程读取数据，简单地来说就是给batch join函数的tensor list是由一个process函数产生的。
 * 在将队列中的元素转化为tensor list的时候，尽管我们每次只读取一个元素（单线程），但是要将元素里面的成员（label, mask, path）给提取出来还是需要使用unstack函数，否则进程会卡死，原因不明，照着做就没问题。
+* 对于annotation file的名字，我们目前规定是`x_y_annotation.txt`，其中x是数据集的名字，而y则标注是训练数据集还是测试数据集，因为我们需要对训练数据及使用图像增强。
 
 `network.py`
 
@@ -56,7 +57,8 @@ h1 = conv2d(x, W1, b1)
 h2 = conv2d(h1, W2, b2)
 ```
 当网络层数很深（100+）的时候，使用这样的写法写出来的代码可以说是相当难看的。那么network.py里面对这一点做了处理：定义了类的成员变量terminals。terminals记录了当前层的输入，使用feed函数结合相关网络层的名称
-来定义terminals的数据。比如当前层名字叫"conv2"，其输入是"conv1"，那么先调用feed("conv1")，再调用conv(...,name="conv2")，那么创建conv2时会自动将terminals作为输入，详情参考装饰器`layer(op)`。
+来定义terminals的数据。比如当前层名字叫"conv2"，其输入是"conv1"，那么先调用feed("conv1")，再调用conv(...,name="conv2")，那么创建conv2时会自动将terminals作为输入，详情参考装饰器`layer(op)`。使用这种方法
+创建网络有多美观，可以看看`GoogLeNet_train.py`这个模型类。
 
 下面简单地介绍一些函数：
 * `load`: 加载pretrained model。可以看到是根据op_name + param_name与网络层中的参数对应起来的，ignore_missing我们设置为True，因为我们需要修改最后一层网络，因此最后一层的参数是无法读取的。在加载数据的过程中我们将相关的参数
