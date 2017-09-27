@@ -7,6 +7,8 @@
 1. GoogLeNet: 测试准确率82%左右
 2. VGG16：测试准确率60%左右（这个数据偏低）
 
+如果提示没有"easydict"，使用pip安装即可
+
 ## 训练的一些技巧
 
 * 使用pretrained model。首先在网上下载用imagenet训练过的GoogLeNet和VGG16的模型，并且自定义网络的最后一层。对于分类网络而言，最后一层是fc层，有100个类则有100个输出，在我们的问题中，我们需要把该层的输出节点数改为196。在源码中，模型的加载时通过name_scope来进行的，比如在pretrained model中第一层卷积层名字为"conv1"，则tensorflow网络中的第一层卷积层名字也必须是"conv1"才能加载模型数据。我们只希望加载最后一层之前的网络参数，因此对于最后一层，我们要重新命名，随便改个"new layer"什么的名字就可以了。
@@ -65,5 +67,13 @@ h2 = conv2d(h1, W2, b2)
 * 像softmax, relu, lrn的使用很简单，这里不说了。
 * `concat`: 卷积层拼接，一般选择的是channel拼接，也就是进行拼接的feature map大小是一样的，然后按channel展开连接，所以一般来说axis=3。
 
+`solver.py`
 
+这个函数比较长，是用来管理训练过程的。
+* `snapshot`: 保存模型文件，隔若干个iteration保存一次。
+* `average_gradients`: 用于单机多卡训练，主要是把各个gpu算得的梯度进行平均，得到每个变量的平均梯度。(输入参数必须是具体的参数值，即调用opt.compute_gradients计算所得梯度，而不能是梯度的op算子（使用tf.gradients可以得到梯度的op算子）)
+* `feed_all_gpu`: 为每个gpu生成feed dict，其中"models"存放的是tf.placeholder，在各gpu的网络初始化时就可以看到。
+* `train_googlenet_multigpu`: 单机多卡训练GoogLeNet。这里面比较重要的模型的重用，即多卡实际上使用的是同一个模型，这个实现需要依赖于`tf.variable_scope`。这里介绍一下`variable_scope`和`name_scope`的区别:
+a) `tf.variable_scope`需结合`tf.get_variable`使用，这时定义的变量只会收到`variable_scope`的影响，而不会受到`name_scope`的影响，也就是变量名只取决于`variable_scope`。另外，`tf.get_variable`定义的变量是不可以有重名的，只能重用。
+b) `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的影响，而且不支持重复使用，命名的时候会自动编号，比如"var:0"和"var:1"，因而支持重名，其实也是不一样的名字。
 
