@@ -76,7 +76,10 @@ h2 = conv2d(h1, W2, b2)
 * `train_googlenet_multigpu`: 单机多卡训练GoogLeNet。这里面比较重要的模型的重用，即多卡实际上使用的是同一个模型，这个实现需要依赖于`tf.variable_scope`。这里介绍一下`variable_scope`和`name_scope`的区别:
 
 a) `tf.variable_scope`需结合`tf.get_variable`使用，这时定义的变量只会收到`variable_scope`的影响，而不会受到`name_scope`的影响，也就是变量名只取决于`variable_scope`。另外，`tf.get_variable`定义的变量是不可以有重名的，只能重用。
+
 b) `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的影响，而且不支持重复使用，命名的时候会自动编号，比如"var:0"和"var:1"，因而支持重名，其实也是不一样的名字。
 
 说回多卡训练。可以看到首先对batch数据进行切分，每个gpu只使用其中一部分数据。然后使用`with tf.device('/gpu:%d' % gpu_id)`来定义各个gpu的网络。实际网络的初始定义只有一次，因此可以看到
-`tf.variable_scope`里重用参数当且仅当"gpu_id > 0"。同理，pretrained的模型的加载也只在id为0的gpu上进行。变量models负责记录每块卡的数据和结果，特别是梯度。然后调用`average_gradients`初始化
+`tf.variable_scope`里重用参数当且仅当"gpu_id > 0"。同理，pretrained的模型的加载也只在id为0的gpu上进行。变量models负责记录每块卡的数据和结果，特别是梯度。然后调用`average_gradients`
+对梯度进行平均，梯度下降算子`apply_gradient_op`是针对平均梯度的，loss是多卡的平均loss，将`avg_loss_op`作为计算loss的算子。这个模块还包括了测试模型的过程，注意测试的时候会丢掉一些数据（
+当不能被一次训练的数据量(payload * ngpus)整除时），因为测试也是使用多卡进行的。
