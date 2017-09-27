@@ -25,4 +25,9 @@
     
 2. `tools/`：启动网络的训练。要进行网络训练直接运行`python train.py`就可以了。
 
-### dataset.py:
+### 代码说明
+1. dataset.py
+
+这个函数最重要的两个部分是：a) 加载数据； b) 创建队列管理batch。
+    * “加载数据”部分：调用read_annotation_file函数获得所有图片的path和labels，然后调用process函数读取图像，对其进行中心裁剪，resize等操作，并且随机改变HSV空间（在训练过程中，测试过程不做数据增强）。
+    * 
