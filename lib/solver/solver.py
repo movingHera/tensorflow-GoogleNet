@@ -181,7 +181,7 @@ class SolverWrapper(object):
             print('Finish initialization!')
             for epoch in range(cfg.TRAIN.NUM_EPOCHS):
                 train_data_num = train_data_producer.get_data_num()
-                batch_num = int(np.ceil(train_data_num / payload_per_gpu *
+                batch_num = int(np.ceil(train_data_num / payload_per_gpu /
                     ngpus))
                 
                 for batch in range(batch_num):
@@ -254,7 +254,8 @@ class SolverWrapper(object):
             
             # Construct the training/test data producer
             train_data_producer = DataProducer(self.image_set, 'train', cfg.TRAIN.BATCH_SIZE)
-            test_data_producer = DataProducer(self.image_set, 'test')
+            test_data_producer = DataProducer(self.image_set, 'test',
+                    cfg.TEST.BATCH_SIZE)
 
             train_data_producer.setup(sess, coord)
             test_data_producer.setup(sess, coord)
@@ -368,25 +369,20 @@ class SolverWrapper(object):
                 if (epoch+1) % cfg.TEST.EPOCHS == 0:
                     # test the model
                     print('test now!')
-                    test_image_batch, test_label_batch = test_data_producer.get_batch_data(sess)
                     test_data_num = test_data_producer.get_data_num()
-
                     # Test mini_batch data each time
-                    mini_batch = 200
-                    mini_batch_num = int(np.ceil(test_data_num / mini_batch)) + 1
+                    batch_num = int(np.ceil(test_data_num /
+                        cfg.TEST.BATCH_SIZE))
                     
-                    all_prediction = np.zeros(test_data_num, dtype=bool)
-                    for batch_idx in range(mini_batch_num):
-                        start_idx = batch_idx * mini_batch
-                        end_idx = min((batch_idx+1) * mini_batch,
-                                test_data_num)
-                        current_image_batch = test_image_batch[start_idx:
-                                end_idx,: ]
-                        current_label_batch = test_label_batch[start_idx:
-                                end_idx, :]
+                    all_prediction = np.zeros(batch_num * cfg.TEST.BATCH_SIZE, dtype=bool)
+                    for batch_idx in range(batch_num):
+                        start_idx = batch_idx * cfg.TEST.BATCH_SIZE
+                        end_idx = (batch_idx+1) * cfg.TEST.BATCH_SIZE
+                        current_image_batch, current_label_batch = \
+                            test_data_producer.get_batch_data(sess)
                         current_pred = sess.run(correct_prediction, feed_dict=
-                                {self.__net.data: test_image_batch, self.__net.keep_prob:1, 
-                                    label_placeholder: test_label_batch})
+                                {self.__net.data: current_image_batch, self.__net.keep_prob:1, 
+                                    label_placeholder: current_label_batch})
                         all_prediction[start_idx: end_idx] = current_pred
                                 
                     all_prediction.astype(np.float32)
@@ -408,7 +404,8 @@ class SolverWrapper(object):
         with sess.as_default():
             # Construct the training/test data producer
             train_data_producer = DataProducer(self.image_set, 'train', cfg.TRAIN.BATCH_SIZE)
-            test_data_producer = DataProducer(self.image_set, 'test')
+            test_data_producer = DataProducer(self.image_set, 'test',
+                    cfg.TEST.BATCH_SIZE)
 
             train_data_producer.setup(sess, coord)
             test_data_producer.setup(sess, coord)
@@ -518,21 +515,14 @@ class SolverWrapper(object):
                     
                     test_data_num = test_data_producer.get_data_num()
                     # Test mini_batch data each time
-                    mini_batch = 200
-                    mini_batch_num = int(np.ceil(test_data_num / mini_batch))+1
-                    all_prediction = np.zeros(test_data_num, dtype=bool)
+                    batch_num = int(np.ceil(test_data_num / cfg.TEST.BATCH_SIZE))
+                    all_prediction = np.zeros(batch_num * cfg.TEST.BATCH_SIZE, dtype=bool)
                     
-                    test_image_batch, test_label_batch = \
-                        test_data_producer.get_batch_data(sess)
-                
-                    for batch_idx in range(mini_batch_num):
-                        start_idx = batch_idx * mini_batch
-                        end_idx = min((batch_idx+1) * mini_batch,
-                                test_data_num)
-                        current_image_batch = test_image_batch[start_idx:
-                                end_idx]
-                        current_label_batch = test_label_batch[start_idx:
-                                end_idx]
+                    for batch_idx in range(batch_num):
+                        start_idx = batch_idx * cfg.TEST.BATCH_SIZE
+                        end_idx = (batch_idx+1) * cfg.TEST.BATCH_SIZE
+                        current_image_batch, current_label_batch = \
+                                test_data_producer.get_batch_data(sess)
                         current_pred = sess.run(correct_prediction,
                                 feed_dict={self.__net.data:
                                     current_image_batch,

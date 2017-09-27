@@ -5,8 +5,8 @@ import os
 import tensorflow as tf
 from config.config import cfg
 
-# TRAINED_MODEL = 'googlenet'
-TRAINED_MODEL = 'vgg16'
+TRAINED_MODEL = 'googlenet'
+# TRAINED_MODEL = 'vgg16'
 IMAGE_SET = 'car'
 
 def train():
@@ -24,8 +24,8 @@ def train():
         # solver handle
         solver = SolverWrapper(IMAGE_SET, output_dir, pretrained_googlenet_filename)
         
-        solver.train_googlenet_model()
-        #solver.train_googlenet_multigpu()
+        #solver.train_googlenet_model()
+        solver.train_googlenet_multigpu()
 
     else:
         pretrained_vgg16_filename = os.path.join(

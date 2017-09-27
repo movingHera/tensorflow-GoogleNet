@@ -42,7 +42,7 @@ __C.COARSE_CLASSES = ['SUV', 'Sedan', 'Coupe', 'Convertible', 'Pickup', 'Hatchba
 __C.TRAIN = edict()
 
 # The recommended batch size for this model
-__C.TRAIN.BATCH_SIZE = 32
+__C.TRAIN.BATCH_SIZE = 256
 
 # The number of classes in car dataset
 __C.TRAIN.N_CLASSES = 196
@@ -80,4 +80,7 @@ __C.TRAIN.OUTPUT_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'output', 'train'))
 __C.TEST = edict()
 
 # The frequency to test the model
-__C.TEST.EPOCHS = 10
+__C.TEST.EPOCHS = 1
+
+# Test batch size
+__C.TEST.BATCH_SIZE = 32
