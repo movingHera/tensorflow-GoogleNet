@@ -83,3 +83,8 @@ b) `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的
 `tf.variable_scope`里重用参数当且仅当"gpu_id > 0"。同理，pretrained的模型的加载也只在id为0的gpu上进行。变量models负责记录每块卡的数据和结果，特别是梯度。然后调用`average_gradients`
 对梯度进行平均，梯度下降算子`apply_gradient_op`是针对平均梯度的，loss是多卡的平均loss，将`avg_loss_op`作为计算loss的算子。这个模块还包括了测试模型的过程，注意测试的时候会丢掉一些数据（
 当不能被一次训练的数据量(payload * ngpus)整除时），因为测试也是使用多卡进行的。
+
+* `train_googlenet_model`: 这是单机单卡训练GoogLeNet的模块。在这里我们可以将最后一层的学习速率设置为其它层的10倍，方法是先将所有变量的梯度op给收集起来，并且将pretrained变量的梯度op分配给
+低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们使用了所有的数据，因为是单卡所以这个好处理，对于不能被batch size
+整除的部分，则最后一次测试的batch减少即可。另外加了注释的代码里有关于其他输出分支的loss，注意GoogLeNet有三个输出分支，但是在fine tune的时候只需要计算最后那个分支的loss就可以了，所以暂时不适用其他分支的loss。
+
