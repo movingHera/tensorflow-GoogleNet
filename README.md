@@ -9,5 +9,4 @@
 
 ## 训练的一些技巧
 
-* 使用pretrained model。首先在网上下载用imagenet训练过的GoogLeNet和VGG16的模型，并且自定义网络的最后一层。对于分类网络而言，最后一层是fc层，有100个类则有100个输出，在我们的问题中，我们需要把该层的输出节点数改为196。在源码中，模型的加载时通过name_scope来进行的，比如
-* 哇哇哇
+* 使用pretrained model。首先在网上下载用imagenet训练过的GoogLeNet和VGG16的模型，并且自定义网络的最后一层。对于分类网络而言，最后一层是fc层，有100个类则有100个输出，在我们的问题中，我们需要把该层的输出节点数改为196。在源码中，模型的加载时通过name_scope来进行的，比如第一层卷积层名字为"conv1"，则参数名分别是"conv1/weights"和"conv1/biases"。我们加载pretrained model就是通过这个一一对应关系来加载的，因此我们需要为最后一层重新命名，随便改个"new layer"什么的名字，这样pretrained model中的网络层名称和你定义的名称不一样，它就不会将pretrained model中的最后一层参数给加载进来。
