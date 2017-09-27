@@ -29,6 +29,20 @@
 1. dataset.py
 
 这个函数最重要的两个部分是：a) 加载数据； b) 创建队列管理batch。
+
 * “加载数据”部分：调用read_annotation_file函数获得所有图片的path和labels，然后调用process函数读取图像，对其进行中心裁剪，resize等操作，并且随机改变HSV空间（在训练过程中，测试过程不做数据增强）。
 * “创建队列”部分：我们使用FIFOQueue来存储图像路径和标记，另外因为tensorflow对png和jpg图像的读取方式不一样，我们将后缀（mask）也作为队列元素的成员。调用相应的enqueue op并且在feed dict里面装载相应的数据既可以将数据装进队列。
-但是
+在生成batch的时候，我们使用`tf.train.batch_join`，该函数接受一个tensor list作为输入，根据用户所需要的batch size产生相应大小的数据包。注意由于在队列里存储的是路径，我们需要先将路径转化为图像数据，再装进这个batch_join函数中。
+
+注意事项：
+* 在获取数据包之前一定要确保队列中有数据，因此我设置了一个queue len变量来记录当前队列中剩余元素的个数，如果queue len小于batch size，那么就会装填数据。
+* tf.train.batch_join支持多线程读取数据，但我亲测发现数据顺序会被打乱，因此目前使用单线程读取数据，简单地来说就是给batch join函数的tensor list是由一个process函数产生的。
+* 在将队列中的元素转化为tensor list的时候，尽管我们每次只读取一个元素（单线程），但是要将元素里面的成员（label, mask, path）给提取出来还是需要使用unstack函数，否则进程会卡死，原因不明，照着做就没问题。
+
+2. network.py
+
+这是目前tensorflow中用得很多的一个类，用来创建网络模型，包含了各种网络层的实现（实际上实现是tensorflow做好的，但是它将参数的接口进行了规范化，并且将模型的搭建变得形象）
+一般我们创建神经网络，大概都是如下般定义
+```python
+a = c
+```
