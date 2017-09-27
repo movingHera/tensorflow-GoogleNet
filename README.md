@@ -87,6 +87,6 @@ b) `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的
 当不能被一次训练的数据量(payload * ngpus)整除时），因为测试也是使用多卡进行的。
 
 * `train_googlenet_model`: 这是单机单卡训练GoogLeNet的模块。在这里我们可以将最后一层的学习速率设置为其它层的10倍，方法是先将所有变量的梯度op给收集起来，并且将pretrained变量的梯度op分配给
-低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们也无法保证使用所有的数据，对于不能被batch size整除的数据也是做舍弃处理，
+低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们也无法保证使用所有的数据，对于不能被batch size整除的数据也是做舍弃处理
 。另外加了注释的代码里有关于其他输出分支的loss，注意GoogLeNet有三个输出分支，但是在fine tune的时候只需要计算最后那个分支的loss就可以了，所以暂时不适用其他分支的loss。
 
