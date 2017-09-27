@@ -26,7 +26,7 @@
 2. `tools/`：启动网络的训练。要进行网络训练直接运行`python train.py`就可以了。
 
 ### 代码说明
-dataset.py
+`dataset.py`
 
 这个函数最重要的两个部分是：a) 加载数据； b) 创建队列管理batch。
 
@@ -39,7 +39,7 @@ dataset.py
 * tf.train.batch_join支持多线程读取数据，但我亲测发现数据顺序会被打乱，因此目前使用单线程读取数据，简单地来说就是给batch join函数的tensor list是由一个process函数产生的。
 * 在将队列中的元素转化为tensor list的时候，尽管我们每次只读取一个元素（单线程），但是要将元素里面的成员（label, mask, path）给提取出来还是需要使用unstack函数，否则进程会卡死，原因不明，照着做就没问题。
 
-network.py
+`network.py`
 
 这是目前tensorflow中用得很多的一个类，用来创建网络模型，包含了各种网络层的实现（实际上实现是tensorflow做好的，但是它将参数的接口进行了规范化，并且将模型的搭建变得形象）
 一般我们创建神经网络，大概都是如下般定义
