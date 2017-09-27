@@ -30,4 +30,5 @@
 
 这个函数最重要的两个部分是：a) 加载数据； b) 创建队列管理batch。
 * “加载数据”部分：调用read_annotation_file函数获得所有图片的path和labels，然后调用process函数读取图像，对其进行中心裁剪，resize等操作，并且随机改变HSV空间（在训练过程中，测试过程不做数据增强）。
-* “创建队列部分”：
+* “创建队列”部分：我们使用FIFOQueue来存储图像路径和标记，另外因为tensorflow对png和jpg图像的读取方式不一样，我们将后缀（mask）也作为队列元素的成员。调用相应的enqueue op并且在feed dict里面装载相应的数据既可以将数据装进队列。
+但是
