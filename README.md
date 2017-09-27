@@ -44,5 +44,26 @@
 这是目前tensorflow中用得很多的一个类，用来创建网络模型，包含了各种网络层的实现（实际上实现是tensorflow做好的，但是它将参数的接口进行了规范化，并且将模型的搭建变得形象）
 一般我们创建神经网络，大概都是如下般定义
 ```python
-a = c
+# Parameters
+W1 = tf.Variable(...)
+b1 = tf.Variable(...)
+W2 = tf.Variable(...)
+b2 = tf.Variable(...)
+# Connect layers
+h1 = conv2d(x, W1, b1)
+h2 = conv2d(h1, W2, b2)
 ```
+当网络层数很深（100+）的时候，使用这样的写法写出来的代码可以说是相当难看的。那么network.py里面对这一点做了处理：定义了类的成员变量terminals。terminals记录了当前层的输入，使用feed函数结合相关网络层的名称
+来定义terminals的数据。比如当前层名字叫"conv2"，其输入是"conv1"，那么先调用feed("conv1")，再调用conv(...,name="conv2")，那么创建conv2时会自动将terminals作为输入，详情参考装饰器`layer(op)`。
+
+下面简单地介绍一些函数：
+* `load`: 加载pretrained model。可以看到是根据op_name + param_name与网络层中的参数对应起来的，ignore_missing我们设置为True，因为我们需要修改最后一层网络，因此最后一层的参数是无法读取的。在加载数据的过程中我们将相关的参数
+装载到`pretrained_var_list`中，有两点作用：1. 在调用`tf.global_variables_intializer`的时候，可以声明对这些pretrained的变量不再进行初始化，否则会进行覆盖。 2. 可以方便我们定义对这些参数的梯度处理，比如其学习速率要低于我们自定义的层。
+* `get_params`: 获取某一特定网络层的参数，*args一般是"weights"和"biases"。
+* `get_output`: 获取某一网络层的输出，在network这个类中，通过layers[name]获得的正是名字为"name"的网络层的输出。
+* `conv`: 卷积层，k_h, k_w是窗口大小，s_h和s_w是垂直方向和水平方向的stride大小（窗口滑动幅度，一般都是1），group参数应该是和卷积层拼接有关的，暂时不用理会。
+* 像softmax, relu, lrn的使用很简单，这里不说了。
+* `concat`: 卷积层拼接，一般选择的是channel拼接，也就是进行拼接的feature map大小是一样的，然后按channel展开连接，所以一般来说axis=3。
+
+
+
