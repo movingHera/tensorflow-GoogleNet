@@ -19,4 +19,10 @@
 1. `lib/`：有关数据产生、网络定义以及训练管理器的代码
     * `dataset/`: 数据产生模块，包括读取annotation file，进行数据增强，将image和label打包成batch供训练使用。
     * `config/`: 配置文件，相当于全局变量，超参数以及路径等定义就在这里。
+    * `networks/`: 包括一个基类network(实现卷积、全连接等层的功能)，还有GoogLeNet和VGG16的网络结构定义（继承network）。
+    * `solver/`: 训练管理器，包括读取数据、创建网络、创建优化器、进行模型存储等。
+    * `utils/`: 提供了计时器timer
+    
 2. `tools/`：启动网络的训练。要进行网络训练直接运行`python train.py`就可以了。
+
+### dataset.py:
