@@ -90,3 +90,7 @@ b) `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的
 低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们也无法保证使用所有的数据，对于不能被batch size整除的数据也是做舍弃处理
 。另外加了注释的代码里有关于其他输出分支的loss，注意GoogLeNet有三个输出分支，但是在fine tune的时候只需要计算最后那个分支的loss就可以了，所以暂时不适用其他分支的loss。
 
+###数据集使用说明
+* 图像数据：分成了`train`和`test`两个文件夹分别存放。
+* 标签数据：统一放在了`annotations`下面。txt格式，每行分别是(x1, y1, x2, y2, cls, image_name)，注意cls是从1开始，使用tf自带的分类器，分类标签应当从0开始。
+
