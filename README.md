@@ -33,8 +33,7 @@
 这个函数最重要的两个部分是：a) 加载数据； b) 创建队列管理batch。
 
 * “加载数据”部分：调用read_annotation_file函数获得所有图片的path和labels，然后调用process函数读取图像，对其进行中心裁剪，resize等操作，并且随机改变HSV空间（在训练过程中，测试过程不做数据增强）。
-* “创建队列”部分：我们使用FIFOQueue来存储图像路径和标记，另外因为tensorflow对png和jpg图像的读取方式不一样，我们将后缀（mask）也作为队列元素的成员。调用相应的enqueue op并且在feed dict里面装载相应的数据既可以将数据装进队列。
-在生成batch的时候，我们使用`tf.train.batch_join`，该函数接受一个tensor list作为输入，根据用户所需要的batch size产生相应大小的数据包。注意由于在队列里存储的是路径，我们需要先将路径转化为图像数据，再装进这个batch_join函数中。
+* “创建队列”部分：我们使用FIFOQueue来存储图像路径和标记，另外因为tensorflow对png和jpg图像的读取方式不一样，我们将后缀（mask）也作为队列元素的成员。调用相应的enqueue op并且在feed dict里面装载相应的数据既可以将数据装进队列。在生成batch的时候，我们使用`tf.train.batch_join`，该函数接受一个tensor list作为输入，根据用户所需要的batch size产生相应大小的数据包。注意由于在队列里存储的是路径，我们需要先将路径转化为图像数据，再装进这个batch_join函数中。
 
 注意事项：
 * 在获取数据包之前一定要确保队列中有数据，因此我设置了一个queue len变量来记录当前队列中剩余元素的个数，如果queue len小于batch size，那么就会装填数据。
@@ -44,8 +43,7 @@
 
 `network.py`
 
-这是目前tensorflow中用得很多的一个类，用来创建网络模型，包含了各种网络层的实现（实际上实现是tensorflow做好的，但是它将参数的接口进行了规范化，并且将模型的搭建变得形象）
-一般我们创建神经网络，大概都是如下般定义
+这是目前tensorflow中用得很多的一个类，用来创建网络模型，包含了各种网络层的实现（实际上实现是tensorflow做好的，但是它将参数的接口进行了规范化，并且将模型的搭建变得形象）一般我们创建神经网络，大概都是如下般定义
 ```python
 # Parameters
 W1 = tf.Variable(...)
@@ -56,13 +54,11 @@ b2 = tf.Variable(...)
 h1 = conv2d(x, W1, b1)
 h2 = conv2d(h1, W2, b2)
 ```
-当网络层数很深（100+）的时候，使用这样的写法写出来的代码可以说是相当难看的。那么network.py里面对这一点做了处理：定义了类的成员变量terminals。terminals记录了当前层的输入，使用feed函数结合相关网络层的名称
-来定义terminals的数据。比如当前层名字叫"conv2"，其输入是"conv1"，那么先调用feed("conv1")，再调用conv(...,name="conv2")，那么创建conv2时会自动将terminals作为输入，详情参考装饰器`layer(op)`。使用这种方法
+当网络层数很深（100+）的时候，使用这样的写法写出来的代码可以说是相当难看的。那么network.py里面对这一点做了处理：定义了类的成员变量terminals。terminals记录了当前层的输入，使用feed函数结合相关网络层的名称来定义terminals的数据。比如当前层名字叫"conv2"，其输入是"conv1"，那么先调用feed("conv1")，再调用conv(...,name="conv2")，那么创建conv2时会自动将terminals作为输入，详情参考装饰器`layer(op)`。使用这种方法
 创建网络有多美观，可以看看`GoogLeNet_train.py`这个模型类。
 
 下面简单地介绍一些函数：
-* `load`: 加载pretrained model。可以看到是根据op_name + param_name与网络层中的参数对应起来的，ignore_missing我们设置为True，因为我们需要修改最后一层网络，因此最后一层的参数是无法读取的。在加载数据的过程中我们将相关的参数
-装载到`pretrained_var_list`中，有两点作用：1. 在调用`tf.global_variables_intializer`的时候，可以声明对这些pretrained的变量不再进行初始化，否则会进行覆盖。 2. 可以方便我们定义对这些参数的梯度处理，比如其学习速率要低于我们自定义的层。
+* `load`: 加载pretrained model。可以看到是根据op_name + param_name与网络层中的参数对应起来的，ignore_missing我们设置为True，因为我们需要修改最后一层网络，因此最后一层的参数是无法读取的。在加载数据的过程中我们将相关的参数装载到`pretrained_var_list`中，有两点作用：1. 在调用`tf.global_variables_intializer`的时候，可以声明对这些pretrained的变量不再进行初始化，否则会进行覆盖。 2. 可以方便我们定义对这些参数的梯度处理，比如其学习速率要低于我们自定义的层。
 * `get_params`: 获取某一特定网络层的参数，*args一般是"weights"和"biases"。
 * `get_output`: 获取某一网络层的输出，在network这个类中，通过layers[name]获得的正是名字为"name"的网络层的输出。
 * `conv`: 卷积层，k_h, k_w是窗口大小，s_h和s_w是垂直方向和水平方向的stride大小（窗口滑动幅度，一般都是1），group参数应该是和卷积层拼接有关的，暂时不用理会。
@@ -81,14 +77,9 @@ h2 = conv2d(h1, W2, b2)
 
    * `tf.Variable`，其命名同时受到`tf.variable_scope`和`tf.name_scope`的影响，而且不支持重复使用，命名的时候会自动编号，比如"var:0"和"var:1"，因而支持重名，其实也是不一样的名字。
 
-说回多卡训练。可以看到首先对batch数据进行切分，每个gpu只使用其中一部分数据。然后使用`with tf.device('/gpu:%d' % gpu_id)`来定义各个gpu的网络。实际网络的初始定义只有一次，因此可以看到
-`tf.variable_scope`里重用参数当且仅当"gpu_id > 0"。同理，pretrained的模型的加载也只在id为0的gpu上进行。变量models负责记录每块卡的数据和结果，特别是梯度。然后调用`average_gradients`
-对梯度进行平均，梯度下降算子`apply_gradient_op`是针对平均梯度的，loss是多卡的平均loss，将`avg_loss_op`作为计算loss的算子。这个模块还包括了测试模型的过程，注意测试的时候会丢掉一些数据（
-当不能被一次训练的数据量(payload * ngpus)整除时），因为测试也是使用多卡进行的。
+   * 说回多卡训练。可以看到首先对batch数据进行切分，每个gpu只使用其中一部分数据。然后使用`with tf.device('/gpu:%d' % gpu_id)`来定义各个gpu的网络。实际网络的初始定义只有一次，因此可以看到`tf.variable_scope`里重用参数当且仅当"gpu_id > 0"。同理，pretrained的模型的加载也只在id为0的gpu上进行。变量models负责记录每块卡的数据和结果，特别是梯度。然后调用`average_gradients`对梯度进行平均，梯度下降算子`apply_gradient_op`是针对平均梯度的，loss是多卡的平均loss，将`avg_loss_op`作为计算loss的算子。这个模块还包括了测试模型的过程，注意测试的时候会丢掉一些数据（当不能被一次训练的数据量(payload * ngpus)整除时），因为测试也是使用多卡进行的。
 
-* `train_googlenet_model`: 这是单机单卡训练GoogLeNet的模块。在这里我们可以将最后一层的学习速率设置为其它层的10倍，方法是先将所有变量的梯度op给收集起来，并且将pretrained变量的梯度op分配给
-低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们也无法保证使用所有的数据，对于不能被batch size整除的数据也是做舍弃处理
-。另外加了注释的代码里有关于其他输出分支的loss，注意GoogLeNet有三个输出分支，但是在fine tune的时候只需要计算最后那个分支的loss就可以了，所以暂时不适用其他分支的loss。
+* `train_googlenet_model`: 这是单机单卡训练GoogLeNet的模块。在这里我们可以将最后一层的学习速率设置为其它层的10倍，方法是先将所有变量的梯度op给收集起来，并且将pretrained变量的梯度op分配给低学习速率的train op，将最后一层变量的梯度收集起来给高学习速率的train op。最后将二者结合在一起就是最终训练的op。测试过程中我们也无法保证使用所有的数据，对于不能被batch size整除的数据也是做舍弃处理。另外加了注释的代码里有关于其他输出分支的loss，注意GoogLeNet有三个输出分支，但是在fine tune的时候只需要计算最后那个分支的loss就可以了，所以暂时不适用其他分支的loss。
 
 ### 数据集使用说明
 
